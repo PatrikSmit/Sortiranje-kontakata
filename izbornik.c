@@ -22,7 +22,7 @@ int izbornik(const char* const ime) {
 	printf("Opcija 9: Izlaz iz programa\n");
 	int pocetak = 0;
 
-	/*static KONTAKT* pronadeniKontakt = NULL;
+	static KONTAKT* pronadeniKontakt = NULL;
 	static KONTAKT* poljeKontakata = NULL;
 
 	scanf("%d", &pocetak);
@@ -90,11 +90,6 @@ int izbornik(const char* const ime) {
 	
 	case 7:
 
-		ispisiAbecednimRedom(poljeKontakata);
-		break;
-
-	case 8:
-
 		if (poljeKontakata != NULL) {
 			free(poljeKontakata);
 			poljeKontakata = NULL;
@@ -103,6 +98,11 @@ int izbornik(const char* const ime) {
 		poljeKontakata = (KONTAKT*)ucitajKontakte(ime);
 
 		brisanjeKontakta(poljeKontakata, ime);
+		break;
+
+	case 8:
+
+		ispisiAbecednimRedom(poljeKontakata);
 		break;
 	
 	case 9:
@@ -113,7 +113,6 @@ int izbornik(const char* const ime) {
 		pocetak = 0;
 	}
 
-	return pocetak;*/
-	return 0;
+	return pocetak;
 	
 }
