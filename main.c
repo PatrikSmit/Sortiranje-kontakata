@@ -7,10 +7,12 @@
 int main(void) {
 
 	int pocetak = 1;
+	char* datoteka = "kontakti.bin";//16
+
 
 	while (pocetak) {
 
-		pocetak = izbornik(datoteka);
+		pocetak = izbornik(datoteka);//8
 	}
 
 	return 0;
