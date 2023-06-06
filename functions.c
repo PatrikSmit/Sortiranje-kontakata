@@ -15,7 +15,7 @@ void kreiranjeDatoteke(const char* const ime) {
 		fclose(fp);
 	}
 	else {
-		fclosse(fp);
+		fclose(fp);
 	}
 }
 
@@ -55,14 +55,14 @@ void dodajKontakt(const char* const ime) {
 	scanf("%29[^\n]", temp.adresa);
 	getch();
 }
-fseek(fp, sizeof(KONTAKT)* brKontakata, SEEK_CUR);//17
-fwrite(&temp, sizeof(KONTAKT), 1, fp);
+fseek(fp, sizeof(int)* brKontakata, SEEK_CUR);//17
+fwrite(temp, sizeof(KONTAKT), 1, fp);
 printf("Novi kontakt uspjesno dodan.\n");
 
 rewind(fp);//17
-brKontakata++;
+brKontakata ++;
 
-fwrite(&brKontakata, sizeof(int), 1, fp);
+fwrite(brKontakata, sizeof(int), 1, fp);
 
 fclose(fp);
 
@@ -278,6 +278,52 @@ void zamjena(KONTAKT* const veci, KONTAKT* const manji) {
 	*veci = temp;
 }
 
+int ispisiAbecednimRedom(const void* a, const void* b) {
+	KONTAKT* imenik[20];
+	KONTAKT* kontaktA = (KONTAKT*)a;
+	KONTAKT* kontaktB = (KONTAKT*)b;
+	return strcmp(kontaktA->ime, kontaktB->ime);
+	for (int i = 0; i < brKontakata; i++) {
+		printf("Kontakt %d:\n", i + 1);
+		printf("Kontakt ID: ");
+		fgets(imenik[i]->ime, sizeof(imenik[i]->id), stdin);
+		imenik[i]->ime[strcspn(imenik[i]->ime, "\n")] = '\0';
+		printf("Ime: ");
+		fgets(imenik[i]->ime, sizeof(imenik[i]->ime), stdin);
+		imenik[i]->ime[strcspn(imenik[i]->ime, "\n")] = '\0';
+		printf("Prezime: ");
+		fgets(imenik[i]->prezime, sizeof(imenik[i]->prezime), stdin);
+		imenik[i]->prezime[strcspn(imenik[i]->prezime, "\n")] = '\0'; 
+		printf("\n");
+		printf("Godina: ");
+		fgets(imenik[i]->godine, sizeof(imenik[i]->godine), stdin);
+		imenik[i]->godine[strcmp(imenik[i]->godine, "\n")] = '\0';
+		printf("Broj mobitela: ");
+		fgets(imenik[i]->brojMobitela, sizeof(imenik[i]->brojMobitela), stdin);
+		imenik[i]->brojMobitela[strcspn(imenik[i]->brojMobitela, "\n")] = '\0';
+		printf("\n");
+		printf("Adresa: ");
+		fgets(imenik[i]->adresa, sizeof(imenik[i]->adresa), stdin);
+		imenik[i]->adresa[strcspn(imenik[i]->adresa, "\n")] = '\0'; 
+		
+	}
+
+	// Sortiranje kontakata
+	qsort(imenik, brKontakata, sizeof(KONTAKT), ispisiAbecednimRedom);//20
+
+	// Ispis sortiranih kontakata
+	printf("Sortirani kontakti:\n");
+	for (int i = 0; i < brKontakata; i++) {
+		printf("Kontakt ID %d:\n", i + 1);
+		printf("Ime: %s\n", imenik[i]->ime);
+		printf("Prezime: %s\n", imenik[i]->prezime);
+		printf("Godina: %d\n", imenik[i]->godine);
+		printf("Broj mobitela: %s\n", imenik[i]->brojMobitela);
+		printf("\n");
+	}
+
+	return 0;
+}
 
 
 int izlazIzPrograma(KONTAKT* polje) {
