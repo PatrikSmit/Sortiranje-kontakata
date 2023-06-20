@@ -7,85 +7,79 @@
 
 
 static int brKontakata = 0;//4 5
+
 void kreiranjeDatoteke(const char* const ime) {
-	FILE* fp = fopen(ime, "rb");
+	FILE* fp = fopen("ime", "w+");
 	if (fp == NULL) {
-		fp = fopen(ime, "wb");
-		fwrite(&brKontakata, sizeof(int), 1, fp);
-		fclose(fp);
+		perror("Greska prilikom kreiranja datoteke: ");
+		exit(EXIT_FAILURE);
 	}
 	else {
-		fclose(fp);
+		printf("Datoteka uspjesno kreirana!\n");
 	}
 }
 
 
 void dodajKontakt(const char* const ime) {
 
-	FILE* fp = fopen(ime, "rb+");
+	size_t velicinaDatoteke;
+	FILE* fp = fopen(ime, "a+");
 	if (fp == NULL) {
-		perror("Dodavanje kontakta u datoteku kontakti.bin");//19
+		perror("Greska prilikom otvaranja datoteke:");//19
 		exit(EXIT_FAILURE);
 	}
-
-	fread(&brKontakata, sizeof(int), 1, fp);
-	printf("Broj kontakata: %d\n", brKontakata);
+	 
+	fseek(fp, 0, SEEK_END);
+	velicinaDatoteke = ftell(fp);
+	rewind(fp);
+	brKontakata = velicinaDatoteke / sizeof(KONTAKT);
 
 	KONTAKT temp = { 0 };
 	temp.id = brKontakata + 1;
-	getch();
 
 	printf("Unesite ime kontakta: ");
-	scanf("%19[^\n]", temp.ime);
-	getch();
+	scanf(" %19[^\n]", temp.ime);
 
 	printf("Unesite prezime kontakta: ");
-	scanf("%19[^\n]", temp.prezime);
-	getch();
+	scanf(" %19[^\n]", temp.prezime);
 
 	printf("Unesite godine kontakta: ");
-	scanf("%d", temp.godine);
-	getch();
+	scanf("%d", &temp.godine);
 
 	printf("Unesite broj mobitela kontakta: ");
-	scanf("%10[^\n]", temp.brojMobitela);
-	getch();
+	scanf(" %10[^\n]", temp.brojMobitela);
 
 	printf("Unesite adresu kontakta: ");
-	scanf("%29[^\n]", temp.adresa);
-	getch();
+	scanf(" %29[^\n]", temp.adresa);
+
+	fwrite(&temp, sizeof(KONTAKT), 1, fp);
+	brKontakata++;
+
+	printf("Novi kontakt uspjesno dodan.\n");
+	fclose(fp);
 }
-fseek(fp, sizeof(int)* brKontakata, SEEK_CUR);//17
-fwrite(temp, sizeof(KONTAKT), 1, fp);
-printf("Novi kontakt uspjesno dodan.\n");
-
-rewind(fp);//17
-brKontakata ++;
-
-fwrite(brKontakata, sizeof(int), 1, fp);
-
-fclose(fp);
 
 
 void* ucitajKontakte(const char* const ime) {
 
-	FILE* fp = fopen(ime, "rb");
+	size_t velicinaDatoteke;
+	FILE* fp = fopen(ime, "r");
 
 	if (fp == NULL) {
 		perror("Ucitavanje kontakata iz datoteke kontakti.txt");//19
-		return NULL;
 		exit(EXIT_FAILURE);
 	}
 
-	fread(&brKontakata, sizeof(int), 1, fp);
-	printf("Broj kontakata: %d\n");
+	fseek(fp, 0, SEEK_END);
+	velicinaDatoteke = ftell(fp);
+	rewind(fp);
+	brKontakata = velicinaDatoteke / sizeof(KONTAKT);
+	printf("Broj kontakata: %d\n", brKontakata);
 
-	KONTAKT* poljeKontakata = ((KONTAKT*)calloc(brKontakata), sizeof(KONTAKT));//14
+	KONTAKT* poljeKontakata = (KONTAKT*)calloc(brKontakata, sizeof(KONTAKT));//14
 
 	if (poljeKontakata == NULL) {
-
 		perror("Zauzimanje memorije kontakata");//19
-		return NULL;
 		exit(EXIT_FAILURE);
 	}
 
@@ -117,6 +111,17 @@ void ispisiSveKontakte(const KONTAKT* const polje) {
 	}
 }
 
+int funkcijaPretrazivanja(const void* a, const void* b) {
+
+	KONTAKT* kotaktA = (KONTAKT*)a;
+	KONTAKT* kotaktB = (KONTAKT*)b;
+
+	if (kotaktA->id < kotaktB->id) return -1;
+	else if (kotaktA->id > kotaktB->id) return 1;
+	else return 0;
+
+}
+
 KONTAKT* pretraziKontakte(KONTAKT* const polje) {
 
 	if (polje == NULL) {
@@ -138,14 +143,9 @@ KONTAKT* pretraziKontakte(KONTAKT* const polje) {
 		}
 	} while (trazeniId < 1 || trazeniId > brKontakata);
 
-	for (i = 0; i < brKontakata; i++) {
+	KONTAKT trazeni_kontakt = { .id = trazeniId };
 
-		if (trazeniId == (polje + i)->id) {
-			printf("Kontakt pronaden.\n");
-
-			return (polje + i);
-		}
-	}
+	return (KONTAKT*)bsearch(&trazeni_kontakt, polje, brKontakata, sizeof(KONTAKT), funkcijaPretrazivanja);
 
 	return NULL;
 }
@@ -157,7 +157,7 @@ void uredivanjeKontakta(KONTAKT* polje, const char* const ime) {
 		return;
 	}
 
-	FILE* fp = fopen(ime, "rb+");
+	FILE* fp = fopen(ime, "r+");
 
 	if (fp == NULL) {
 		perror("Azuriranje kontakata");
@@ -169,6 +169,7 @@ void uredivanjeKontakta(KONTAKT* polje, const char* const ime) {
 	printf("Unesite ID kontakta kojeg zelite azurirati: ");
 
 	do {
+		fflush(stdin);
 		scanf("%d", &trazeniId);
 
 		if (trazeniId < 0 || trazeniId > brKontakata) {
@@ -180,31 +181,25 @@ void uredivanjeKontakta(KONTAKT* polje, const char* const ime) {
 
 	temp.id = trazeniId;
 
-	getchar();
 	printf("Unesite ime kontakta (trenutno: %s): ", (polje + trazeniId - 1)->ime);
-	scanf("%24[^\n]", temp.ime);
-	getchar();
+	scanf(" %19[^\n]", temp.ime);
 
 	printf("Unesite prezime korisnika (trenutno %s): ", (polje + trazeniId - 1)->prezime);
-	scanf("%24[^\n]", temp.prezime);
-	getchar();
+	scanf(" %19[^\n]", temp.prezime);
 
 	printf("Unesite godine korisnika (trenutno %d): ", (polje + trazeniId - 1)->godine);
-	scanf("%d", &temp.godine);
-	getchar();
+	scanf(" %d", &temp.godine);
 
 	printf("Unesite adresu korisnika (trenutno %s): ", (polje + trazeniId - 1)->adresa);
-	scanf("%49[^\n]", temp.adresa);
-	getchar();
+	scanf(" %29[^\n]", temp.adresa);
 
 	printf("Unesite broj mobitela korisnika (trenutno %s): ", (polje + trazeniId - 1)->brojMobitela);
-	scanf("%10[^\n]", temp.brojMobitela);
+	scanf(" %10[^\n]", temp.brojMobitela);
 
-	fseek(fp, sizeof(int), SEEK_SET);
-	fseek(fp, sizeof(KONTAKT) * (trazeniId - 1), SEEK_CUR);
+	fseek(fp, sizeof(KONTAKT) * (trazeniId - 1), SEEK_SET);
 	fwrite(&temp, sizeof(KONTAKT), 1, fp);
 
-	printf("Kontakt uspjesno azuriran\n");
+	printf("Kontakt uspjesno azuriran!\n");
 
 	fclose(fp);
 }
@@ -215,15 +210,19 @@ void brisanjeKontakta(KONTAKT* const polje, const char* const ime) {
 		printf("Polje kontakata prazno\n");
 		return;
 	}
-
-	FILE* fp = fopen(ime, "rb+");
+	size_t velicinaDatoteke;
+	FILE* fp = fopen(ime, "r+");
 
 	if (fp == NULL) {
 		perror("Brisanje kontakata");
 		exit(EXIT_FAILURE);
 	}
 
-	fseek(fp, sizeof(int), SEEK_CUR);
+	fseek(fp, 0, SEEK_END);
+	velicinaDatoteke = ftell(fp);
+	rewind(fp);
+	brKontakata = velicinaDatoteke / sizeof(KONTAKT);
+	printf("Broj kontakata: %d\n", brKontakata);
 
 	int i, trazeniId;
 
@@ -255,80 +254,50 @@ void brisanjeKontakta(KONTAKT* const polje, const char* const ime) {
 				(pomocnoPolje + c)->id -= 1;
 			}
 
-			fwrite((pomocnoPolje + c), sizeof(KONTAKT), 1, fp);
 			c++;
 		}
 	}
 
+	fclose(fp);
+	fp = fopen(ime, "wb");
+	fwrite(pomocnoPolje, sizeof(KONTAKT), brKontakata - 1, fp);
+
 	free(pomocnoPolje);//15 14
-	pomocnoPolje = NULL;
 
-	rewind(fp);
-
-	fwrite(&c, sizeof(int), 1, fp);
 	fclose(fp);
 
 	printf("Kontakt je uspjesno obrisan\n");
 }
 
-void zamjena(KONTAKT* const veci, KONTAKT* const manji) {
-	KONTAKT temp = { 0 };
-	temp = *manji;
-	*manji = *veci;
-	*veci = temp;
+
+int funkcijaUsporedbe(const void* a, const void* b) {
+
+	KONTAKT* kotaktA = (KONTAKT*)a;
+	KONTAKT* kotaktB = (KONTAKT*)b;
+
+	return strcmp(kotaktA->prezime, kotaktB->prezime);
 }
 
-int ispisiAbecednimRedom(const void* a, const void* b) {
-	KONTAKT* imenik[20];
-	KONTAKT* kontaktA = (KONTAKT*)a;
-	KONTAKT* kontaktB = (KONTAKT*)b;
-	return strcmp(kontaktA->ime, kontaktB->ime);
-	for (int i = 0; i < brKontakata; i++) {
-		printf("Kontakt %d:\n", i + 1);
-		printf("Kontakt ID: ");
-		fgets(imenik[i]->ime, sizeof(imenik[i]->id), stdin);
-		imenik[i]->ime[strcspn(imenik[i]->ime, "\n")] = '\0';
-		printf("Ime: ");
-		fgets(imenik[i]->ime, sizeof(imenik[i]->ime), stdin);
-		imenik[i]->ime[strcspn(imenik[i]->ime, "\n")] = '\0';
-		printf("Prezime: ");
-		fgets(imenik[i]->prezime, sizeof(imenik[i]->prezime), stdin);
-		imenik[i]->prezime[strcspn(imenik[i]->prezime, "\n")] = '\0'; 
-		printf("\n");
-		printf("Godina: ");
-		fgets(imenik[i]->godine, sizeof(imenik[i]->godine), stdin);
-		imenik[i]->godine[strcmp(imenik[i]->godine, "\n")] = '\0';
-		printf("Broj mobitela: ");
-		fgets(imenik[i]->brojMobitela, sizeof(imenik[i]->brojMobitela), stdin);
-		imenik[i]->brojMobitela[strcspn(imenik[i]->brojMobitela, "\n")] = '\0';
-		printf("\n");
-		printf("Adresa: ");
-		fgets(imenik[i]->adresa, sizeof(imenik[i]->adresa), stdin);
-		imenik[i]->adresa[strcspn(imenik[i]->adresa, "\n")] = '\0'; 
-		
-	}
+void ispisiAbecednimRedom(KONTAKT* const polje) {
 
-	// Sortiranje kontakata
-	qsort(imenik, brKontakata, sizeof(KONTAKT), ispisiAbecednimRedom);//20
+	qsort(polje, brKontakata, sizeof(KONTAKT), funkcijaUsporedbe);
 
-	// Ispis sortiranih kontakata
 	printf("Sortirani kontakti:\n");
-	for (int i = 0; i < brKontakata; i++) {
-		printf("Kontakt ID %d:\n", i + 1);
-		printf("Ime: %s\n", imenik[i]->ime);
-		printf("Prezime: %s\n", imenik[i]->prezime);
-		printf("Godina: %d\n", imenik[i]->godine);
-		printf("Broj mobitela: %s\n", imenik[i]->brojMobitela);
-		printf("\n");
+	int i;
+	for (i = 0; i < brKontakata; i++) {
+		printf("Kontakt broj %d\nID: %d\nIme: %s\nPrezime: %s\nGodine: %d\nAdresa: %s\nMobitel: %s\n\n",
+			i + 1,
+			(polje + i)->id,
+			(polje + i)->ime,
+			(polje + i)->prezime,
+			(polje + i)->godine,
+			(polje + i)->adresa,
+			(polje + i)->brojMobitela);
 	}
-
-	return 0;
 }
 
 
-int izlazIzPrograma(KONTAKT* polje) {
+void izlazIzPrograma(KONTAKT* polje) {
 
 	free(polje);
-
-	return 0;
 }

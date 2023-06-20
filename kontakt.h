@@ -1,3 +1,4 @@
+#pragma once
 #ifndef DATATYPE_H //6
 #define DATATYPE_H
 
@@ -11,4 +12,5 @@ typedef struct kontakt { //3
 
 }KONTAKT;
 
-#endif#pragma once
+#endif
+#pragma once

@@ -5,15 +5,12 @@
 #include "kontakt.h"
 
 int main(void) {
+	char* datoteka = "kontakti.txt";//16
 
-	int pocetak = 1;
-	char* datoteka = "kontakti.bin";//16
+	printf("Pocetak programa!\n");
+	izbornik(datoteka);//8
 
-
-	while (pocetak) {
-
-		pocetak = izbornik(datoteka);//8
-	}
+	printf("Program zavrsen!\n");
 
 	return 0;
 }
